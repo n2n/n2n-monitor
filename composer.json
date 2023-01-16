@@ -33,12 +33,12 @@
   },
   "autoload" : {
     "psr-4" : {
-      "n2n\\persistence\\" : "src/app/n2n/monitor"
+      "n2n\\monitor\\" : "src/app/n2n/monitor"
     }
   },
   "autoload-dev" : {
     "psr-4" : {
-      "n2n\\persistence\\" : "src/test/n2n/monitor"
+      "n2n\\monitor\\" : "src/test/n2n/monitor"
     }
   }
 }
