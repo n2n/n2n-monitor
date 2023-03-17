@@ -24,10 +24,12 @@ namespace n2n\monitor\ext;
 use n2n\core\ext\N2nExtension;
 use n2n\core\container\impl\AppN2nContext;
 use n2n\monitor\alert\AlertToExceptionN2nMonitor;
+use n2n\core\config\AppConfig;
+use n2n\core\cache\AppCache;
 
 class MonitorN2nExtension implements N2nExtension {
 
-	public function __construct() {
+	function __construct(AppConfig $appConfig, AppCache $appCache) {
 	}
 
 	function setUp(AppN2nContext $appN2nContext): void {
