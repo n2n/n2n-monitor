@@ -31,7 +31,7 @@ use n2n\monitor\model\MonitorModel;
 use n2n\monitor\bo\AlertCacheItem;
 
 class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonitor, AddOnContext {
-	function alert(string $namespace, string $hash, string $text, AlertSeverity $severity): void {
+	function alert(string $namespace, string $hash, string $text, AlertSeverity $severity = AlertSeverity::HIGH): void {
 		$alertException = new AlertException(md5($namespace . ':' . $hash));
 
 		$alertCacheItem = new AlertCacheItem($hash, $text, $severity);
