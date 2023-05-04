@@ -1,85 +1,71 @@
 <?php
 namespace n2n\monitor\model;
 
-use n2n\core\VarStore;
-use n2n\io\managed\impl\FsFileSource;
-use n2n\core\container\N2nContext;
-use n2n\context\attribute\RequestScoped;
-use n2n\context\attribute\Inject;
 use n2n\util\cache\CacheStore;
 use n2n\mail\Mail;
 use n2n\mail\Transport;
-use n2n\core\N2N;
 use n2n\util\HashUtils;
 use n2n\monitor\bo\AlertCacheItem;
-use n2n\bind\build\impl\Bind;
 use n2n\util\cache\CacheItem;
+use n2n\core\container\N2nContext;
 
-#[RequestScoped]
 class MonitorModel {
-
 	private const NS = 'n2nmonitor';
-
-	#[Inject]
-	private N2nContext $n2nContext;
+	private const CACHE_STORE_NAME_ALERT = 'alert';
 
 	private CacheStore $monitorCacheStore;
 
-	public function isCorrectKey(string $key) {
-		return $key === $this->geMonitorUrlKey(false);
+	public function __construct(private N2nContext $n2nContext) {
+
 	}
 
-	public function geMonitorUrlKey(bool $create): string {
-		$fsPath = $this->getMonitorFsPath(null, 'key', $create);
+	public function isCorrectKey(string $key) {
+		return $key === $this->getMonitorUrlKey(false);
+	}
 
-		$fileResource = new FsFileSource($fsPath);
-		if ($fsPath->isEmpty() && $create) {
-			$fileResource->createOutputStream()->write(HashUtils::base36Md5Hash(random_bytes(4)));
+	public function getMonitorUrlKey(bool $create): ?string {
+		$alertUrlKeyCacheItem = $this->getCacheStore()->get('monitorUrlKey', []);
+		if ($alertUrlKeyCacheItem !== null) {
+			return $alertUrlKeyCacheItem->getData();
 		}
 
-		return $fileResource->createInputStream()->read();
+		if (!$create) {
+			return null;
+		}
+
+		$hash = HashUtils::base36Md5Hash(random_bytes(4));
+		$this->getCacheStore()->store('monitorUrlKey', [], $hash);
+		return $hash;
 	}
 
 	public function getAlertCacheItem(string $key): ?AlertCacheItem {
-		return $this->getCacheStore()->get('alert', ['key' => $key])?->getData();
+		return $this->getCacheStore()->get(self::CACHE_STORE_NAME_ALERT, ['key' => $key])?->getData();
 	}
 
 	/**
 	 * @return AlertCacheItem[]
 	 */
 	public function getAlertCacheItems(): array {
-		return array_map(fn(CacheItem $cacheItem) => $cacheItem->getData(), $this->getCacheStore()->findAll('alert'));
+		return array_map(fn(CacheItem $cacheItem) => $cacheItem->getData(), $this->getCacheStore()->findAll(self::CACHE_STORE_NAME_ALERT));
 	}
 
-	public function cacheAlert(AlertCacheItem $existingAlertCacheItem): AlertCacheItem {
-		$existingAlertCacheItem = $this->getAlertCacheItem($existingAlertCacheItem->key);
+	public function cacheAlert(AlertCacheItem $alertCacheItem): void {
+		$existingAlertCacheItem = $this->getAlertCacheItem($alertCacheItem->key);
 		if ($existingAlertCacheItem !== null) {
-			$existingAlertCacheItem->occurrences = $existingAlertCacheItem->occurrences + 1;
+			$alertCacheItem->occurrences = $existingAlertCacheItem->occurrences + 1;
 		}
 
-		$this->storeAlertCacheItem($existingAlertCacheItem);
-
-		return $this->getAlertCacheItem($existingAlertCacheItem->key);
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isMonitoringEnabled(): bool {
-		return true; //@todo: get config and read flag
-	}
-
-	/**
-	 * @return \n2n\util\io\fs\FsPath[]
-	 * @throws \n2n\util\io\fs\FileOperationException
-	 */
-	public function getAlertFsPaths(): array {
-		return $this->getVarStore()->requestDirFsPath(VarStore::CATEGORY_TMP, self::NS, 'error')->getChildren();
+		$this->storeAlertCacheItem($alertCacheItem);
 	}
 
 	public function sendAlertsReportMail() {
-		$defaultAddresser = N2N::getAppConfig()->mail()->getDefaultAddresser();
-		$logMailRecipient = N2N::getAppConfig()->error()->getLogMailRecipient();
+		if (count($this->getAlertCacheItems()) === 0) {
+			return;
+		}
+
+		$appConfig = $this->n2nContext->getAppConfig();
+		$defaultAddresser = $appConfig->mail()->getDefaultAddresser();
+		$logMailRecipient = $appConfig->error()->getLogMailRecipient();
 		$mail = new Mail($defaultAddresser, 'Alerts Report', $this->createAlertsReportText(), $logMailRecipient);
 		Transport::send($mail);
 	}
@@ -88,10 +74,11 @@ class MonitorModel {
 		$this->getCacheStore()->clear();
 	}
 
-	private function createAlertsReportText() {
+	public function createAlertsReportText() {
 		$reportText = '';
 		foreach ($this->getAlertCacheItems() as $alertCacheItem) {
-			$reportText .= 'Error occured ' . $alertCacheItem->occurrences . ' times' . PHP_EOL;
+			$reportText .= 'Alert occured ' . $alertCacheItem->occurrences . ' times' . PHP_EOL;
+			$reportText .= 'Severity: ' . $alertCacheItem->severity->value . PHP_EOL;
 			$reportText .= $alertCacheItem->text . PHP_EOL;
 			$reportText .= '-----------------------------------------------' . PHP_EOL;
 		}
@@ -99,19 +86,10 @@ class MonitorModel {
 	}
 
 	private function getCacheStore() {
-		return $this->monitorCacheStore ?? $this->monitorCacheStore = $this->n2nContext->getAppCache()->lookupCacheStore('n2nmonitor');
-	}
-
-	private function getMonitorFsPath(?string $dirName, string $fileName, bool $createFile = true) {
-		return $this->getVarStore()->requestFileFsPath(VarStore::CATEGORY_TMP, self::NS, $dirName, $fileName,
-				true, $createFile, false);
-	}
-
-	private function getVarStore() {
-		return $this->varStore ?? $this->varStore = $this->n2nContext->getVarStore();
+		return $this->monitorCacheStore ?? $this->monitorCacheStore = $this->n2nContext->getAppCache()->lookupCacheStore(self::NS);
 	}
 
 	private function storeAlertCacheItem(AlertCacheItem $alertCacheItem) {
-		$this->getCacheStore()->store('alert', ['key' => $alertCacheItem->key],$alertCacheItem);
+		$this->getCacheStore()->store(self::CACHE_STORE_NAME_ALERT, ['key' => $alertCacheItem->key],$alertCacheItem);
 	}
 }
