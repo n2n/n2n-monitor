@@ -31,7 +31,7 @@
     "n2n/n2n-mail": "^7.4"
   },
   "require-dev" : {
-    "phpunit/phpunit" : "^9.5",
+    "phpunit/phpunit" : "^9.6.7",
     "n2n/n2n-test" : "^7.4"
   },
   "autoload" : {
