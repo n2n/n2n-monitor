@@ -1,2 +1,6 @@
 /.idea
+/.phpunit.result.cache
 /composer.lock
+/src/var/tmp
+/src/var/shared/tmp
+/src/var/log
