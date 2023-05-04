@@ -29,6 +29,8 @@ use n2n\util\magic\impl\SimpleMagicContext;
 use n2n\core\ext\AlertSeverity;
 use n2n\monitor\model\MonitorModel;
 use n2n\monitor\bo\AlertCacheItem;
+use n2n\core\ext\Url;
+use n2n\web\http\nav\Murl;
 
 class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonitor, AddOnContext {
 	private MonitorModel $monitorModel;
@@ -48,9 +50,14 @@ class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonito
 		N2N::getExceptionHandler()->log($alertException);
 	}
 
-	function copyTo(AppN2nContext $appN2NContext): void {
-		$appN2NContext->setMonitor($this);
-		$appN2NContext->addAddonContext($this);
+	function getAlertPostUrl(): ?Url {
+		if (!$this->n2nContext->isHttpContextAvailable()) {
+			return null;
+		}
+
+		$key = $this->monitorModel->getMonitorUrlKey(true);
+
+		return Murl::context()->pathExt('_monitoring', $key)->toUrl($this->n2nContext);
 	}
 
 	function finalize(): void {

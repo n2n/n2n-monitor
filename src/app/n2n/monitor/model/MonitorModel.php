@@ -19,7 +19,7 @@ class MonitorModel {
 
 	}
 
-	public function isCorrectKey(string $key) {
+	public function isCorrectKey(string $key): bool {
 		return $key === $this->getMonitorUrlKey(false);
 	}
 
@@ -58,7 +58,7 @@ class MonitorModel {
 		$this->storeAlertCacheItem($alertCacheItem);
 	}
 
-	public function sendAlertsReportMail() {
+	public function sendAlertsReportMail(): void {
 		if (count($this->getAlertCacheItems()) === 0) {
 			return;
 		}
@@ -70,11 +70,11 @@ class MonitorModel {
 		Transport::send($mail);
 	}
 
-	public function clearCache() {
+	public function clearCache(): void {
 		$this->getCacheStore()->clear();
 	}
 
-	public function createAlertsReportText() {
+	public function createAlertsReportText(): string {
 		$reportText = '';
 		foreach ($this->getAlertCacheItems() as $alertCacheItem) {
 			$reportText .= 'Alert occured ' . $alertCacheItem->occurrences . ' times' . PHP_EOL;
@@ -85,11 +85,12 @@ class MonitorModel {
 		return $reportText;
 	}
 
-	private function getCacheStore() {
-		return $this->monitorCacheStore ?? $this->monitorCacheStore = $this->n2nContext->getAppCache()->lookupCacheStore(self::NS);
+	private function getCacheStore(): CacheStore {
+		return $this->monitorCacheStore
+				?? $this->monitorCacheStore = $this->n2nContext->getAppCache()->lookupCacheStore(self::NS);
 	}
 
-	private function storeAlertCacheItem(AlertCacheItem $alertCacheItem) {
-		$this->getCacheStore()->store(self::CACHE_STORE_NAME_ALERT, ['key' => $alertCacheItem->key],$alertCacheItem);
+	private function storeAlertCacheItem(AlertCacheItem $alertCacheItem): void {
+		$this->getCacheStore()->store(self::CACHE_STORE_NAME_ALERT, ['key' => $alertCacheItem->key], $alertCacheItem);
 	}
 }
