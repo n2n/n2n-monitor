@@ -1,0 +1,57 @@
++ LOG ONLY + An n2n\monitor\alert\AlertException occurred
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+LOG MESSAGE
+-----------
+{"severity":"high","name":"TypeError","message":"something","stackTrace":"TypeError: something\\n    at EventAddComponent.start (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/main.js?v=1.41:27190:11)\\n    at EventAddComponent_click_HostBindingHandler (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/main.js?v=1.41:27223:20)\\n    at executeListenerWithErrorHandling (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/vendor.js?v=1.41:74356:12)\\n    at wrapListenerIn_markDirtyAndPreventDefault (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/vendor.js?v=1.41:74387:18)\\n    at HTMLButtonElement.<anonymous> (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/vendor.js?v=1.41:97071:34)\\n    at _ZoneDelegate.invokeTask (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/polyfills.js?v=1.41:382:171)\\n    at http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/vendor.js?v=1.41:84089:49\\n    at AsyncStackTaggingZoneSpec.onInvokeTask (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/vendor.js?v=1.41:84089:30)\\n    at _ZoneDelegate.invokeTask (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/polyfills.js?v=1.41:382:54)\\n    at Object.onInvokeTask (http:\/\/app.localhost\/event-manager\/src-php\/public\/assets\/em\/emapp-dev\/vendor.js?v=1.41:84391:25)"}
+
+STACK TRACE
+-----------
+n2n\monitor\alert\AlertException: #0 /tmp/cimonkey13223171187518293782/src/app/n2n/monitor/controller/MonitorController.php(45): n2n\monitor\alert\AlertToExceptionN2nMonitor->alert()
+#1 [internal function]: n2n\monitor\controller\MonitorController->index()
+#2 /tmp/cimonkey13223171187518293782/src/vendor/n2n/n2n-reflection/src/app/n2n/reflection/magic/MagicMethodInvoker.php(219): ReflectionMethod->invokeArgs()
+#3 /tmp/cimonkey13223171187518293782/src/vendor/n2n/n2n-web/src/app/n2n/web/http/controller/ControllerAdapter.php(100): n2n\reflection\magic\MagicMethodInvoker->invoke()
+#4 /tmp/cimonkey13223171187518293782/src/vendor/n2n/n2n-web/src/app/n2n/web/http/controller/ControllerContext.php(150): n2n\web\http\controller\ControllerAdapter->execute()
+#5 /tmp/cimonkey13223171187518293782/src/vendor/n2n/n2n-web/src/app/n2n/web/http/controller/ControllingPlan.php(263): n2n\web\http\controller\ControllerContext->execute()
+#6 /tmp/cimonkey13223171187518293782/src/vendor/n2n/n2n-web/src/app/n2n/web/http/controller/ControllingPlan.php(214): n2n\web\http\controller\ControllingPlan->workOffQueues()
+#7 /tmp/cimonkey13223171187518293782/src/vendor/n2n/n2n-test/src/app/n2n/test/HttpTestEnv.php(264): n2n\web\http\controller\ControllingPlan->execute()
+#8 /tmp/cimonkey13223171187518293782/src/test/n2n/monitor/controller/MonitorControllerTest.php(38): n2n\test\TestRequest->exec()
+#9 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/Framework/TestCase.php(1608): n2n\monitor\controller\MonitorControllerTest->testIndex()
+#10 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/Framework/TestCase.php(1214): PHPUnit\Framework\TestCase->runTest()
+#11 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/Framework/TestResult.php(728): PHPUnit\Framework\TestCase->runBare()
+#12 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/Framework/TestCase.php(964): PHPUnit\Framework\TestResult->run()
+#13 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/Framework/TestSuite.php(684): PHPUnit\Framework\TestCase->run()
+#14 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/Framework/TestSuite.php(684): PHPUnit\Framework\TestSuite->run()
+#15 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/Framework/TestSuite.php(684): PHPUnit\Framework\TestSuite->run()
+#16 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/TextUI/TestRunner.php(651): PHPUnit\Framework\TestSuite->run()
+#17 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/TextUI/Command.php(144): PHPUnit\TextUI\TestRunner->run()
+#18 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/src/TextUI/Command.php(97): PHPUnit\TextUI\Command->run()
+#19 /tmp/cimonkey13223171187518293782/src/vendor/phpunit/phpunit/phpunit(107): PHPUnit\TextUI\Command::main()
+#20 /tmp/cimonkey13223171187518293782/src/vendor/bin/phpunit(123): include('...')
+#21 {main}
+
+
+SERVER VARS
+-----------
+Array
+(
+    [HOSTNAME] => *HIDDEN*
+    [HOME] => *HIDDEN*
+    [NODE_OPTIONS] => *HIDDEN*
+    [PATH] => /opt/ant/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    [ANT_HOME] => *HIDDEN*
+    [PWD] => *HIDDEN*
+    [PHP_SELF] => vendor/bin/phpunit
+    [SCRIPT_NAME] => vendor/bin/phpunit
+    [SCRIPT_FILENAME] => vendor/bin/phpunit
+    [PATH_TRANSLATED] => vendor/bin/phpunit
+    [DOCUMENT_ROOT] => 
+    [REQUEST_TIME_FLOAT] => 1683211054.7973
+    [REQUEST_TIME] => 1683211054
+    [argv] => Array
+        (
+            [0] => vendor/bin/phpunit
+        )
+
+    [argc] => 1
+)
