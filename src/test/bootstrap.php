@@ -1,25 +1,29 @@
 <?php
 
+use n2n\core\TypeLoader;
+use n2n\core\N2N;
+use n2n\core\cache\impl\FileN2nCache;
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// $pubPath = realpath(dirname(__FILE__));
-// $appPath = realpath($pubPath . '/../app');
-// $libPath = realpath($pubPath . '/../lib');
-// $testPath = realpath($pubPath . '/../test');
-// $varPath = realpath($pubPath . '/../var');
+ $pubPath = realpath(dirname(__FILE__));
+ $appPath = realpath($pubPath . '/../app');
+ $libPath = realpath($pubPath . '/../lib');
+ $testPath = realpath($pubPath . '/../test');
+ $varPath = realpath($pubPath . '/../var');
 
-// set_include_path(implode(PATH_SEPARATOR, array($appPath, $libPath, $testPath, get_include_path())));
+ set_include_path(implode(PATH_SEPARATOR, array($appPath, $libPath, $testPath, get_include_path())));
 
 define('N2N_STAGE', 'test');
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// TypeLoader::register(true,
-// 		require __DIR__ . '/../vendor/composer/autoload_psr4.php',
-// 		require __DIR__ . '/../vendor/composer/autoload_classmap.php');
+ TypeLoader::register(true,
+ 		require __DIR__ . '/../vendor/composer/autoload_psr4.php',
+ 		require __DIR__ . '/../vendor/composer/autoload_classmap.php');
 
-// N2N::initialize($pubPath, $varPath, new FileN2nCache());
+ N2N::initialize($pubPath, $varPath, new FileN2nCache());
 
 // $testSqlFsPath = N2N::getVarStore()->requestFileFsPath('bak', null, null, 'backup.sql', false, false, false);
 

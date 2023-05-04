@@ -31,11 +31,18 @@ use n2n\monitor\model\MonitorModel;
 use n2n\monitor\bo\AlertCacheItem;
 
 class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonitor, AddOnContext {
+	private MonitorModel $monitorModel;
+
+	public function __construct(array $objs, AppN2nContext $appN2nContext) {
+		parent::__construct($objs);
+		$this->monitorModel = new MonitorModel($appN2nContext);
+	}
+
 	function alert(string $namespace, string $hash, string $text, AlertSeverity $severity = AlertSeverity::HIGH): void {
 		$alertException = new AlertException(md5($namespace . ':' . $hash));
 
 		$alertCacheItem = new AlertCacheItem($hash, $text, $severity);
-		N2N::getLookupManager()->lookup(MonitorModel::class)->cacheAlert($alertCacheItem);
+		$this->monitorModel->cacheAlert($alertCacheItem);
 
 		$alertException->setLogMessage($text);
 		N2N::getExceptionHandler()->log($alertException);

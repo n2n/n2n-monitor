@@ -29,11 +29,15 @@ use n2n\core\cache\AppCache;
 
 class MonitorN2nExtension implements N2nExtension {
 
-	function __construct(AppConfig $appConfig, AppCache $appCache) {
+	function __construct(private AppConfig $appConfig, AppCache $appCache) {
 	}
 
 	function setUp(AppN2nContext $appN2nContext): void {
-		$monitor = new AlertToExceptionN2nMonitor([]);
+		if (!$this->appConfig->error()->isMonitorEnabled()) {
+			return;
+		}
+
+		$monitor = new AlertToExceptionN2nMonitor([], $appN2nContext);
 		$appN2nContext->setMonitor($monitor);
 		$appN2nContext->addAddonContext($monitor);
 	}
