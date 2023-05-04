@@ -35,7 +35,7 @@ class MonitorController extends ControllerAdapter {
 		} catch (\JsonException $e) {
 			throw new BadRequestException('Invalid JSON provided', 0, $e);
 		}
-		var_dump($requestBody);
+
 		$discriminator = $requestBody['discriminator'];
 		unset($requestBody['discriminator']);
 
