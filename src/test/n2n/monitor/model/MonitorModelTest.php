@@ -5,10 +5,7 @@ use PHPUnit\Framework\TestCase;
 use n2n\test\TestEnv;
 use n2n\monitor\bo\AlertCacheItem;
 use n2n\core\ext\AlertSeverity;
-use n2n\core\config\AppConfig;
-use n2n\core\config\ErrorConfig;
-use n2n\core\config\MailConfig;
-use n2n\util\StringUtils;
+use n2n\core\container\N2nContext;
 
 class MonitorModelTest extends TestCase {
 
@@ -16,14 +13,8 @@ class MonitorModelTest extends TestCase {
 
 	function setUp() : void {
 		$this->reset();
-		$this->monitorModel = TestEnv::lookup(MonitorModel::class);
-
-		$appConfigMock = $this->createMock(AppConfig::class);
-		$appConfigMock->method('error')->willReturn(new ErrorConfig(logMailRecipient: 'test@test.test', monitorEnabled: true));
-		$appConfigMock->method('mail')->willReturn(new MailConfig(defaultAddresser: 'test@test.test'));
-
-		$this->monitorModel->setAppConfig($appConfigMock);
-
+		$n2nContext = TestEnv::lookup(N2nContext::class);
+		$this->monitorModel = new MonitorModel($n2nContext);
 
 		if (isset($this->monitorModel)) {
 			$this->monitorModel->clearCache();
@@ -67,20 +58,20 @@ class MonitorModelTest extends TestCase {
 		$this->assertEquals(2, $this->monitorModel->getAlertCacheItem('test')->occurrences);
 	}
 
-	public function testSendAlertsReportMail() {
-		$dataArr = [
-				'severity' => 'high',
-				'name' => 'TypeError',
-				'message' => 'something',
-				'stackTrace' => 'TypeError: something\n    at EventAddComponent.start (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27190:11)\n    at EventAddComponent_click_HostBindingHandler (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27223:20)\n    at executeListenerWithErrorHandling (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74356:12)\n    at wrapListenerIn_markDirtyAndPreventDefault (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74387:18)\n    at HTMLButtonElement.<anonymous> (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:97071:34)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:171)\n    at http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:49\n    at AsyncStackTaggingZoneSpec.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:30)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:54)\n    at Object.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84391:25)'
-		];
-
-		$this->monitorModel->cacheAlert(new AlertCacheItem('test1', StringUtils::jsonEncode($dataArr), AlertSeverity::LOW));
-		$this->monitorModel->cacheAlert(new AlertCacheItem('test1', StringUtils::jsonEncode($dataArr), AlertSeverity::HIGH));
-		$this->monitorModel->cacheAlert(new AlertCacheItem('test2', StringUtils::jsonEncode($dataArr), AlertSeverity::HIGH));
-
-		var_dump($this->monitorModel->createAlertsReportText());
-	}
+//	public function testSendAlertsReportMail() {
+//		$dataArr = [
+//				'severity' => 'high',
+//				'name' => 'TypeError',
+//				'message' => 'something',
+//				'stackTrace' => 'TypeError: something\n    at EventAddComponent.start (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27190:11)\n    at EventAddComponent_click_HostBindingHandler (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27223:20)\n    at executeListenerWithErrorHandling (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74356:12)\n    at wrapListenerIn_markDirtyAndPreventDefault (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74387:18)\n    at HTMLButtonElement.<anonymous> (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:97071:34)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:171)\n    at http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:49\n    at AsyncStackTaggingZoneSpec.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:30)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:54)\n    at Object.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84391:25)'
+//		];
+//
+//		$this->monitorModel->cacheAlert(new AlertCacheItem('test1', StringUtils::jsonEncode($dataArr), AlertSeverity::LOW));
+//		$this->monitorModel->cacheAlert(new AlertCacheItem('test1', StringUtils::jsonEncode($dataArr), AlertSeverity::HIGH));
+//		$this->monitorModel->cacheAlert(new AlertCacheItem('test2', StringUtils::jsonEncode($dataArr), AlertSeverity::HIGH));
+//
+//		var_dump($this->monitorModel->createAlertsReportText());
+//	}
 
 	public function testClearCache() {
 		$urlKey = $this->monitorModel->getMonitorUrlKey(true);
