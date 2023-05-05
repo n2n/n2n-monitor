@@ -106,7 +106,6 @@ class MonitorModel {
 		$reportText = '';
 		foreach ($this->getAlertCacheItems($severity) as $alertCacheItem) {
 			$reportText .= 'Alert occured ' . $alertCacheItem->occurrences . ' times' . PHP_EOL;
-			$reportText .= 'Severity: ' . $alertCacheItem->severity->value . PHP_EOL;
 			$reportText .= $alertCacheItem->text . PHP_EOL;
 			$reportText .= '-----------------------------------------------' . PHP_EOL;
 		}
