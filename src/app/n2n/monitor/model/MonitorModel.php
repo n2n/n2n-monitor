@@ -12,10 +12,13 @@ use n2n\core\N2N;
 use n2n\core\ext\AlertSeverity;
 use n2n\monitor\alert\AlertException;
 use n2n\util\io\fs\FsPath;
+use n2n\util\io\IoUtils;
+use n2n\util\ex\IllegalStateException;
 
 class MonitorModel {
-	private const NS = 'n2nmonitor';
+	private const NS = 'n2n\\monitor';
 	private const CACHE_STORE_NAME_ALERT = 'alert';
+	private const ALERT_URL_KEY_FILE_NAME = 'key';
 
 	private CacheStore $monitorCacheStore;
 
@@ -25,29 +28,31 @@ class MonitorModel {
 
 	}
 
-	public function isCorrectKey(string $key) {
+	public function isCorrectKey(string $key): bool {
 		return $key === $this->getMonitorUrlKey(false);
 	}
 
 	public function getMonitorUrlKey(bool $create): ?string {
-		$fsPath = $this->getMonitorFsPath(null, 'key', $create);
-		$fileResource = new FsFileSource($fsPath);
+		$fsPath = $this->getAlertUrlKeyFsPath($create);
 
-		if (!$fsPath->exists() && !$create) {
+		$key = null;
+		if ($fsPath->exists()) {
+			$key = IoUtils::getContents($fsPath);
+		}
+
+		if (!empty($key)) {
+			return $key;
+		} else if (!$create) {
 			return null;
 		}
 
-		if ($fsPath->isEmpty() && $create) {
-			$key = HashUtils::base36Md5Hash(random_bytes(4));
-			$fileResource->createOutputStream()->write($key);
-			return $key;
-		}
-
-		return $fileResource->createInputStream()->read();
+		$key = HashUtils::base36Md5Hash(IllegalStateException::try(fn() => random_bytes(4)));
+		IoUtils::putContents($fsPath, $key);
+		return $key;
 	}
 
 	public function removeMonitorUrlKey(): void {
-		$this->getMonitorFsPath(null, 'key', false)->delete();
+		$this->getAlertUrlKeyFsPath(null, 'key', false)->delete();
 	}
 
 	public function getAlertCacheItem(string $key, AlertSeverity $severity): ?AlertCacheItem {
@@ -78,11 +83,12 @@ class MonitorModel {
 	}
 
 	public function sendAlertsReportMail(AlertSeverity $severity = null): void {
-		if (count($this->getAlertCacheItems($severity)) === 0) {
+		if (empty($this->getAlertCacheItems($severity))) {
 			return;
 		}
 
-		$alertException = new AlertException(md5(uniqid()), $this->createAlertMessage($severity), 0);
+		$alertException = new AlertException(AlertException::class . ':' . $severity?->value,
+				$this->createAlertMessage($severity), 0);
 		$alertException->setLogMessage($this->createAlertsMailText($severity));
 		N2N::getExceptionHandler()->log($alertException);
 	}
@@ -98,28 +104,28 @@ class MonitorModel {
 		if ($severity) {
 			$message .= ' with severity ' . $severity->value;
 		}
-		$message .= ' occured.';
+		$message .= ' occurred.';
 		return $message;
 	}
 
 	public function createAlertsMailText(AlertSeverity $severity = null): string {
 		$reportText = '';
 		foreach ($this->getAlertCacheItems($severity) as $alertCacheItem) {
-			$reportText .= 'Alert occured ' . $alertCacheItem->occurrences . ' times' . PHP_EOL;
+			$reportText .= 'Alert occurred ' . $alertCacheItem->occurrences . ' times' . PHP_EOL;
 			$reportText .= $alertCacheItem->text . PHP_EOL;
 			$reportText .= '-----------------------------------------------' . PHP_EOL;
 		}
 		return $reportText;
 	}
 
-	private function getCacheStore() {
+	private function getCacheStore(): CacheStore {
 		return $this->monitorCacheStore
-				?? $this->monitorCacheStore = $this->n2nContext->getAppCache()->lookupCacheStore('n2nmonitor');
+				?? $this->monitorCacheStore = $this->n2nContext->getAppCache()->lookupCacheStore(self::NS);
 	}
 
-	private function getMonitorFsPath(?string $dirName, string $fileName, bool $createFile = true): FsPath {
-		return $this->getVarStore()->requestFileFsPath(VarStore::CATEGORY_TMP, self::NS, $dirName, $fileName,
-				true, $createFile, false);
+	private function getAlertUrlKeyFsPath(bool $createFile = true): FsPath {
+		return $this->getVarStore()->requestFileFsPath(VarStore::CATEGORY_TMP, self::NS, null,
+				self::ALERT_URL_KEY_FILE_NAME, true, $createFile, false, true);
 	}
 
 	private function getVarStore(): VarStore {

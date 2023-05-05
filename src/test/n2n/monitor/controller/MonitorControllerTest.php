@@ -26,16 +26,15 @@ class MonitorControllerTest extends TestCase {
 		$key = $this->monitorModel->getMonitorUrlKey(true);
 
 		$dataArr = [
-				'discriminator' => 'TypeErrorhttp://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.412719011',
-				'severity' => 'high',
-				'name' => 'TypeError',
-				'message' => 'something',
-				'stackTrace' => 'TypeError: something\n    at EventAddComponent.start (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27190:11)\n    at EventAddComponent_click_HostBindingHandler (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27223:20)\n    at executeListenerWithErrorHandling (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74356:12)\n    at wrapListenerIn_markDirtyAndPreventDefault (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74387:18)\n    at HTMLButtonElement.<anonymous> (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:97071:34)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:171)\n    at http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:49\n    at AsyncStackTaggingZoneSpec.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:30)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:54)\n    at Object.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84391:25)'
+			'discriminator' => 'TypeErrorhttp://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.412719011',
+			'severity' => 'high',
+			'name' => 'TypeError',
+			'message' => 'something',
+			'stackTrace' => 'TypeError: something\n    at EventAddComponent.start (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27190:11)\n    at EventAddComponent_click_HostBindingHandler (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27223:20)\n    at executeListenerWithErrorHandling (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74356:12)\n    at wrapListenerIn_markDirtyAndPreventDefault (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74387:18)\n    at HTMLButtonElement.<anonymous> (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:97071:34)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:171)\n    at http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:49\n    at AsyncStackTaggingZoneSpec.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:30)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:54)\n    at Object.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84391:25)'
 		];
 
 		$response = TestEnv::http()->newRequest()
 				->post(['_monitoring', $key])
-				->putLookupInjection(MonitorModel::class, $this->monitorModel)
 				->bodyJson($dataArr)->exec();
 
 		$this->assertEquals(200, $response->getStatus());
@@ -55,7 +54,6 @@ class MonitorControllerTest extends TestCase {
 
 		$response = TestEnv::http()->newRequest()
 				->post(['_monitoring', $key])
-				->putLookupInjection(MonitorModel::class, $this->monitorModel)
 				->bodyJson($dataArr)->exec();
 
 		$alertCacheItems = $this->monitorModel->getAlertCacheItems();
@@ -88,7 +86,6 @@ class MonitorControllerTest extends TestCase {
 
 		TestEnv::http()->newRequest()
 				->post(['_monitoring', $key])
-				->putLookupInjection(MonitorModel::class, $this->monitorModel)
 				->bodyJson($dataArr)->exec();
 	}
 

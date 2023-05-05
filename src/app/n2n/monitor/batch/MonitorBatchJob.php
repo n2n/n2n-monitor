@@ -11,15 +11,15 @@ use n2n\core\ext\AlertSeverity;
 class MonitorBatchJob {
 	private MonitorModel $monitorModel;
 
-	private function _init(N2nContext $n2nContext) {
+	private function _init(N2nContext $n2nContext): void {
 		$this->monitorModel = new MonitorModel($n2nContext);
 	}
 
-	public function _onNewHour() {
+	public function _onNewHour(): void {
 		$this->monitorModel->sendAlertsReportMail(AlertSeverity::HIGH);
 	}
 
-	public function _onNewDay() {
+	public function _onNewDay(): void {
 		$this->monitorModel->sendAlertsReportMail(AlertSeverity::LOW);
 	}
 }

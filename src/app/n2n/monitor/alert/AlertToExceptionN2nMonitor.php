@@ -29,30 +29,35 @@ use n2n\core\ext\AlertSeverity;
 use n2n\monitor\model\MonitorModel;
 use n2n\monitor\bo\AlertCacheItem;
 use n2n\util\uri\Url;
+use n2n\core\container\N2nContext;
 
 class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonitor, AddOnContext {
 	private MonitorModel $monitorModel;
-	private AppN2nContext $appN2nContext;
+	private N2nContext $n2nContext;
 
-	public function __construct(array $objs, AppN2nContext $appN2nContext) {
+	public function __construct(array $objs, N2nContext $n2nContext) {
 		parent::__construct($objs);
-		$this->appN2nContext = $appN2nContext;
-		$this->monitorModel = new MonitorModel($appN2nContext);
+		$this->n2nContext = $n2nContext;
+	}
+
+	function getMonitorModel(): MonitorModel {
+		return $this->monitorModel
+				?? $this->monitorModel = new MonitorModel($this->n2nContext);
 	}
 
 	function alert(string $namespace, string $discriminator, string $text, AlertSeverity $severity = AlertSeverity::HIGH): void {
 		$alertCacheItem = new AlertCacheItem(md5($namespace . $discriminator), $text, $severity);
-		$this->monitorModel->cacheAlert($alertCacheItem);
+		$this->getMonitorModel()->cacheAlert($alertCacheItem);
 	}
 
 	function getAlertPostUrl(): ?Url {
-		if (!$this->appN2nContext->isHttpContextAvailable()) {
+		if (!$this->n2nContext->isHttpContextAvailable()) {
 			return null;
 		}
 
-		$request = $this->appN2nContext->getHttpContext()->getRequest();
+		$request = $this->n2nContext->getHttpContext()->getRequest();
 		return $request->getHostUrl()->ext($request->getContextPath()->ext('_monitoring',
-				$this->monitorModel->getMonitorUrlKey(true)));
+				$this->getMonitorModel()->getMonitorUrlKey(true)));
 	}
 
 	function finalize(): void {
