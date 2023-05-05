@@ -22,42 +22,37 @@
 namespace n2n\monitor\alert;
 
 use n2n\core\ext\N2nMonitor;
-use n2n\core\N2N;
 use n2n\core\container\impl\AddOnContext;
 use n2n\core\container\impl\AppN2nContext;
 use n2n\util\magic\impl\SimpleMagicContext;
 use n2n\core\ext\AlertSeverity;
 use n2n\monitor\model\MonitorModel;
 use n2n\monitor\bo\AlertCacheItem;
-use n2n\core\ext\Url;
-use n2n\web\http\nav\Murl;
+use n2n\util\uri\Url;
 
 class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonitor, AddOnContext {
 	private MonitorModel $monitorModel;
+	private AppN2nContext $appN2nContext;
 
 	public function __construct(array $objs, AppN2nContext $appN2nContext) {
 		parent::__construct($objs);
+		$this->appN2nContext = $appN2nContext;
 		$this->monitorModel = new MonitorModel($appN2nContext);
 	}
 
-	function alert(string $namespace, string $hash, string $text, AlertSeverity $severity = AlertSeverity::HIGH): void {
-		$alertException = new AlertException(md5($namespace . ':' . $hash));
-
-		$alertCacheItem = new AlertCacheItem($hash, $text, $severity);
+	function alert(string $namespace, string $discriminator, string $text, AlertSeverity $severity = AlertSeverity::HIGH): void {
+		$alertCacheItem = new AlertCacheItem(md5($namespace . $discriminator), $text, $severity);
 		$this->monitorModel->cacheAlert($alertCacheItem);
-
-		$alertException->setLogMessage($text);
-		N2N::getExceptionHandler()->log($alertException);
 	}
 
 	function getAlertPostUrl(): ?Url {
-		if (!$this->n2nContext->isHttpContextAvailable()) {
+		if (!$this->appN2nContext->isHttpContextAvailable()) {
 			return null;
 		}
 
-		$key = $this->monitorModel->getMonitorUrlKey(true);
-
-		return Murl::context()->pathExt('_monitoring', $key)->toUrl($this->n2nContext);
+		$request = $this->appN2nContext->getHttpContext()->getRequest();
+		return $request->getHostUrl()->ext($request->getContextPath()->ext('_monitoring',
+				$this->monitorModel->getMonitorUrlKey(true)));
 	}
 
 	function finalize(): void {

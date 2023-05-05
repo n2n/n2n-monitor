@@ -30,19 +30,40 @@ class MonitorController extends ControllerAdapter {
 		$this->checkKey($key);
 		$this->checkAlertsOverload();
 
-		try {
-			$requestBody = StringUtils::jsonDecode($this->getHttpContext()->getRequest()->getBody(), true);
-		} catch (\JsonException $e) {
-			throw new BadRequestException('Invalid JSON provided', 0, $e);
-		}
+		$requestBody = $this->parseRequestBody();
 
 		$discriminator = $requestBody['discriminator'];
 		unset($requestBody['discriminator']);
 
 		$encodedContentJson = StringUtils::jsonEncode($requestBody);
-		$severity = EnumUtils::valueToUnit($requestBody['severity'] ?? null, AlertSeverity::class);
+		$severity = $this->getSeverity($requestBody);
 
-		$this->getN2nContext()->getMonitor()->alert(self::class, $discriminator, $encodedContentJson, $severity);
+		$params = [self::class, $discriminator, $encodedContentJson];
+		if ($severity !== null) {
+			$params[] = $severity;
+		}
+		$this->getN2nContext()->getMonitor()->alert(...$params);
+	}
+
+	private function parseRequestBody(): array {
+		try {
+			$body = $this->getHttpContext()->getRequest()->getBody();
+			return StringUtils::jsonDecode($body, true);
+		} catch (\JsonException $e) {
+			throw new BadRequestException('Invalid JSON provided', 0, $e);
+		}
+	}
+
+	private function getSeverity(array $requestBody): ?AlertSeverity {
+		if (!isset($requestBody['severity'])) {
+			return null;
+		}
+
+		try {
+			return EnumUtils::valueToUnit($requestBody['severity'], AlertSeverity::class);
+		} catch (\InvalidArgumentException $e) {
+			throw new BadRequestException('Invalid severity provided', 0, $e);
+		}
 	}
 
 	private function checkKey(string $key) {
