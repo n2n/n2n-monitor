@@ -14,11 +14,11 @@ class MonitorModelTest extends TestCase {
 	function setUp() : void {
 		$this->reset();
 		$n2nContext = TestEnv::lookup(N2nContext::class);
-		$this->monitorModel = new MonitorModel($n2nContext);
+		$this->monitorModel = new MonitorModel($n2nContext->getVarStore(),
+				$n2nContext->getAppCache()->lookupCacheStore(MonitorModel::NS));
 
-		if (isset($this->monitorModel)) {
-			$this->monitorModel->clearCache();
-		}
+		$this->monitorModel->clearCache();
+		$this->monitorModel->removeMonitorUrlKey();
 	}
 
 	public function testGetMonitorUrlKey() {
@@ -31,7 +31,7 @@ class MonitorModelTest extends TestCase {
 		$storedAlertCacheItem = new AlertCacheItem('test', 'test', AlertSeverity::LOW);
 		$this->monitorModel->cacheAlert($storedAlertCacheItem);
 
-		$fetchedAlertCacheItem = $this->monitorModel->getAlertCacheItem('test');
+		$fetchedAlertCacheItem = $this->monitorModel->getAlertCacheItem('test', AlertSeverity::LOW);
 		$this->assertEquals($storedAlertCacheItem->text, $fetchedAlertCacheItem->text);
 		$this->assertEquals($storedAlertCacheItem->occurrences, $fetchedAlertCacheItem->occurrences);
 		$this->assertEquals($storedAlertCacheItem->severity, $fetchedAlertCacheItem->severity);
@@ -39,12 +39,23 @@ class MonitorModelTest extends TestCase {
 
 	public function testGetAlertCacheItems() {
 		$cacheItem1 = new AlertCacheItem('test1', 'test', AlertSeverity::LOW);
-		$cacheItem2 = new AlertCacheItem('test2', 'test', AlertSeverity::LOW);
+		$cacheItem2 = new AlertCacheItem('test2', 'test', AlertSeverity::HIGH);
 
 		$this->monitorModel->cacheAlert($cacheItem1);
 		$this->monitorModel->cacheAlert($cacheItem2);
 
 		$this->assertCount(2, $this->monitorModel->getAlertCacheItems());
+	}
+
+	public function testGetAlertCacheItemsOfOneSeverity() {
+		$cacheItem1 = new AlertCacheItem('test1', 'test', AlertSeverity::LOW);
+		$cacheItem2 = new AlertCacheItem('test2', 'test', AlertSeverity::HIGH);
+
+		$this->monitorModel->cacheAlert($cacheItem1);
+		$this->monitorModel->cacheAlert($cacheItem2);
+
+		$this->assertCount(1, $this->monitorModel->getAlertCacheItems(AlertSeverity::LOW));
+		$this->assertCount(1, $this->monitorModel->getAlertCacheItems(AlertSeverity::HIGH));
 	}
 
 	public function testCacheAlert() {
@@ -55,31 +66,48 @@ class MonitorModelTest extends TestCase {
 		$this->monitorModel->cacheAlert($cacheItem2);
 
 		$this->assertCount(1, $this->monitorModel->getAlertCacheItems());
-		$this->assertEquals(2, $this->monitorModel->getAlertCacheItem('test')->occurrences);
+		$this->assertEquals(2, $this->monitorModel->getAlertCacheItem('test', AlertSeverity::LOW)->occurrences);
 	}
 
-//	public function testSendAlertsReportMail() {
-//		$dataArr = [
-//				'severity' => 'high',
-//				'name' => 'TypeError',
-//				'message' => 'something',
-//				'stackTrace' => 'TypeError: something\n    at EventAddComponent.start (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27190:11)\n    at EventAddComponent_click_HostBindingHandler (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/main.js?v=1.41:27223:20)\n    at executeListenerWithErrorHandling (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74356:12)\n    at wrapListenerIn_markDirtyAndPreventDefault (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:74387:18)\n    at HTMLButtonElement.<anonymous> (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:97071:34)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:171)\n    at http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:49\n    at AsyncStackTaggingZoneSpec.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84089:30)\n    at _ZoneDelegate.invokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/polyfills.js?v=1.41:382:54)\n    at Object.onInvokeTask (http://app.localhost/event-manager/src-php/public/assets/em/emapp-dev/vendor.js?v=1.41:84391:25)'
-//		];
-//
-//		$this->monitorModel->cacheAlert(new AlertCacheItem('test1', StringUtils::jsonEncode($dataArr), AlertSeverity::LOW));
-//		$this->monitorModel->cacheAlert(new AlertCacheItem('test1', StringUtils::jsonEncode($dataArr), AlertSeverity::HIGH));
-//		$this->monitorModel->cacheAlert(new AlertCacheItem('test2', StringUtils::jsonEncode($dataArr), AlertSeverity::HIGH));
-//
-//		var_dump($this->monitorModel->createAlertsReportText());
-//	}
+	public function testRemoveAlertsWithSpecificSeverity() {
+		$cacheItem1 = new AlertCacheItem('test1', 'test', AlertSeverity::LOW);
+		$cacheItem2 = new AlertCacheItem('test2', 'test', AlertSeverity::HIGH);
 
-	public function testClearCache() {
+		$this->monitorModel->cacheAlert($cacheItem1);
+		$this->monitorModel->cacheAlert($cacheItem2);
+
+		$this->assertCount(2, $this->monitorModel->getAlertCacheItems());
+
+		$this->monitorModel->clearCache(AlertSeverity::LOW);
+
+		$this->assertCount(1, $this->monitorModel->getAlertCacheItems());
+		$this->assertNull($this->monitorModel->getAlertCacheItem('test1', AlertSeverity::LOW));
+	}
+
+	public function testIsEmptyAfterClearCache() {
+		$cacheItem1 = new AlertCacheItem('test1', 'test', AlertSeverity::LOW);
+		$cacheItem2 = new AlertCacheItem('test2', 'test', AlertSeverity::HIGH);
+
+		$this->monitorModel->cacheAlert($cacheItem1);
+		$this->monitorModel->cacheAlert($cacheItem2);
+
+		$this->monitorModel->clearCache();
+
+		$this->assertEmpty($this->monitorModel->getAlertCacheItems());
+	}
+
+	public function testClearCacheAndRemoveMonitorUrlKey() {
 		$urlKey = $this->monitorModel->getMonitorUrlKey(true);
 		$this->monitorModel->cacheAlert(new AlertCacheItem('test', 'test', AlertSeverity::LOW));
+
+		$this->assertNotEmpty( $this->monitorModel->getAlertCacheItems());
 
 		$this->monitorModel->clearCache();
 
 		$this->assertEmpty( $this->monitorModel->getAlertCacheItems());
+
+		$this->monitorModel->removeMonitorUrlKey();
+
 		$this->assertNotEquals($urlKey, $this->monitorModel->getMonitorUrlKey(true));
 	}
 
