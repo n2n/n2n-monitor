@@ -53,14 +53,7 @@ class MonitorModel {
 			return null;
 		}
 
-		$randomBytes = null;
-		try {
-			$randomBytes = random_bytes(4);
-		} catch (\Throwable $e) {
-			throw new IllegalStateException('Could not create random bytes for MonitorUrlKey', 0, $e);
-		}
-
-		$key = HashUtils::base36Md5Hash($randomBytes);
+		$key = IllegalStateException::try(fn() => HashUtils::base36Md5Hash(random_bytes(4)));
 		IoUtils::putContents($fsPath, $key);
 		return $key;
 	}
