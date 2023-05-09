@@ -38,7 +38,7 @@ class MonitorN2nExtension implements N2nExtension {
 		}
 
 		$monitor = new AlertToExceptionN2nMonitor([], $n2nContext);
-		$appN2nContext->setMonitor($monitor);
-		$appN2nContext->addAddonContext($monitor);
+		$n2nContext->setMonitor($monitor);
+		$n2nContext->addAddonContext($monitor);
 	}
 }

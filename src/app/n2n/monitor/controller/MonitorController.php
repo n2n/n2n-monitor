@@ -14,8 +14,9 @@ class MonitorController extends ControllerAdapter {
 
 	private MonitorModel $monitorModel;
 
-	private function _init(N2nContext $n2nContext) {
-		$this->monitorModel = new MonitorModel($n2nContext);
+	private function _init(N2nContext $n2nContext): void {
+		$this->monitorModel = new MonitorModel($n2nContext->getVarStore(),
+				$n2nContext->getAppCache()->lookupCacheStore(MonitorModel::NS));
 	}
 
 	/**
@@ -26,7 +27,7 @@ class MonitorController extends ControllerAdapter {
 	 * @throws \n2n\util\JsonEncodeFailedException
 	 * @throws \n2n\util\io\fs\FileOperationException
 	 */
-	public function index(string $key) {
+	public function index(string $key): void {
 		$this->checkKey($key);
 		$this->checkAlertsOverload();
 
@@ -66,7 +67,7 @@ class MonitorController extends ControllerAdapter {
 		}
 	}
 
-	private function checkKey(string $key) {
+	private function checkKey(string $key): void {
 		if (!$this->monitorModel->isCorrectKey($key)) {
 			throw new PageNotFoundException();
 		}

@@ -23,7 +23,6 @@ namespace n2n\monitor\alert;
 
 use n2n\core\ext\N2nMonitor;
 use n2n\core\container\impl\AddOnContext;
-use n2n\core\container\impl\AppN2nContext;
 use n2n\util\magic\impl\SimpleMagicContext;
 use n2n\core\ext\AlertSeverity;
 use n2n\monitor\model\MonitorModel;
@@ -42,7 +41,8 @@ class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonito
 
 	function getMonitorModel(): MonitorModel {
 		return $this->monitorModel
-				?? $this->monitorModel = new MonitorModel($this->n2nContext);
+				?? $this->monitorModel = new MonitorModel($this->n2nContext->getVarStore(),
+						$this->n2nContext->getAppCache()->lookupCacheStore(MonitorModel::NS));
 	}
 
 	function alert(string $namespace, string $discriminator, string $text, AlertSeverity $severity = AlertSeverity::HIGH): void {
