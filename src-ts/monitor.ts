@@ -49,13 +49,13 @@ class MonitorErrorHandlerImpl {
 
 const monitorUrl = document?.querySelector('meta[name="monitor-url"]')?.getAttribute('content');
 if (!!monitorUrl) {
-	(window as any).monitorErrorHandler = new MonitorErrorHandlerImpl(new URL(monitorUrl));
+	(window as any)._n2nMonitorErrorHandler = new MonitorErrorHandlerImpl(new URL(monitorUrl));
 
 	window.addEventListener('error', (event: ErrorEvent) => {
-		(window as any).monitorErrorHandler.handleError(event.error);
+		(window as any)._n2nMonitorErrorHandler.handleError(event.error);
 	});
 	window.addEventListener('securitypolicyviolation', (event: SecurityPolicyViolationEvent) => {
 		const error = new Error(`Content Security Policy violation: blockedURI=${event.blockedURI}, effectiveDirective=${event.effectiveDirective}, violatedDirective=${event.violatedDirective}`);
-		(window as any).handleError(error);
+		(window as any)._n2nMonitorErrorHandler.handleError(error);
 	});
 }

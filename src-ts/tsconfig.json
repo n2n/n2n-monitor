@@ -1,0 +1,5 @@
+{
+  "compilerOptions": {
+    "outDir": "../src/public/assets/n2n-monitor/"
+  }
+}
