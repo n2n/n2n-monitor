@@ -9,11 +9,10 @@ use n2n\impl\web\ui\view\html\HtmlView;
 class MonitorHtmlBuilder {
 	public function __construct(HtmlView $view) {
 		$this->view = $view;
+		$this->meta = new MonitorHtmlBuilderMeta($view);
 	}
 
-	public function setup() {
-		$htmlMeta = $this->view->getHtmlBuilder()->meta();
-		$htmlMeta->addMeta(['name' => 'monitor-url', 'content' => $this->view->getN2nContext()->getMonitor()->getAlertPostUrl()]);
-		$htmlMeta->addJs('monitor.min.js', 'n2n\monitor', true, true, ['defer', 'type' => 'module']);
+	public function meta(): MonitorHtmlBuilderMeta {
+		return $this->meta;
 	}
 }
