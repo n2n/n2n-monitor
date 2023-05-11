@@ -56,6 +56,7 @@ if (!!monitorUrl) {
 	});
 	window.addEventListener('securitypolicyviolation', (event: SecurityPolicyViolationEvent) => {
 		const error = new Error(`Content Security Policy violation: blockedURI=${event.blockedURI}, effectiveDirective=${event.effectiveDirective}, violatedDirective=${event.violatedDirective}`);
+		error.name = 'SecurityPolicyViolationEvent on ' + window.location.href;
 		(window as any)._n2nMonitorErrorHandler.handleError(error);
 	});
 }

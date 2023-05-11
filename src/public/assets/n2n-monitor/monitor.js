@@ -47,6 +47,7 @@ if (!!monitorUrl) {
     });
     window.addEventListener('securitypolicyviolation', function (event) {
         var error = new Error("Content Security Policy violation: blockedURI=".concat(event.blockedURI, ", effectiveDirective=").concat(event.effectiveDirective, ", violatedDirective=").concat(event.violatedDirective));
+        error.name = 'SecurityPolicyViolationEvent on ' + window.location.href;
         window._n2nMonitorErrorHandler.handleError(error);
     });
 }
