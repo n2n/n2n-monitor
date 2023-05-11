@@ -10,6 +10,6 @@ class MonitorHtmlBuilderMeta {
 	public function setup() {
 		$htmlMeta = $this->view->getHtmlBuilder()->meta();
 		$htmlMeta->addMeta(['name' => 'monitor-url', 'content' => $this->view->getN2nContext()->getMonitor()->getAlertPostUrl()]);
-		$htmlMeta->addJs('monitor.min.js', 'n2n\monitor', true, true, ['defer', 'type' => 'module']);
+		$htmlMeta->addJs('monitor.js', 'n2n\monitor', true, true, ['defer', 'type' => 'module']);
 	}
 }
