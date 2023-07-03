@@ -7,8 +7,9 @@ use n2n\impl\web\ui\view\html\HtmlView;
  * MonitorHtmlBuilderMeta provides non-html meta information to your views. You can access it over
  */
 class MonitorHtmlBuilder {
-	public function __construct(HtmlView $view) {
-		$this->view = $view;
+	private MonitorHtmlBuilderMeta $meta;
+
+	public function __construct(private HtmlView $view) {
 		$this->meta = new MonitorHtmlBuilderMeta($view);
 	}
 
