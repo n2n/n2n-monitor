@@ -25,7 +25,8 @@ class MonitorController extends ControllerAdapter {
 	 * @param string $key
 	 * @return void
 	 * @throws \n2n\util\JsonEncodeFailedException
-	 * @throws \n2n\util\io\fs\FileOperationException
+	 * @throws BadRequestException
+	 * @throws PageNotFoundException
 	 */
 	public function index(string $key): void {
 		$this->checkKey($key);

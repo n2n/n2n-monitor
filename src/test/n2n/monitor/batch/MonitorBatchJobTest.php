@@ -26,6 +26,11 @@ class MonitorBatchJobTest extends TestCase {
 				new AlertCacheItem('test2', 'test', AlertSeverity::HIGH),
 		]);
 
+		$this->monitorModelMock->method('getAlertCacheItems')->with(AlertSeverity::MEDIUM)->willReturn([
+				new AlertCacheItem('test1', 'test', AlertSeverity::MEDIUM),
+				new AlertCacheItem('test2', 'test', AlertSeverity::MEDIUM),
+		]);
+
 		$this->monitorModelMock->method('getAlertCacheItems')->with(AlertSeverity::LOW)->willReturn([
 				new AlertCacheItem('test1', 'test', AlertSeverity::LOW),
 				new AlertCacheItem('test2', 'test', AlertSeverity::LOW),
@@ -40,11 +45,21 @@ class MonitorBatchJobTest extends TestCase {
 				->method('clearCache')
 				->with($this->equalTo(AlertSeverity::HIGH));
 
-
 		$this->monitorBatchJob->_onNewHour();
 	}
 
 	public function testOnNewDay(): void {
+		$this->monitorModelMock->expects($this->once())
+				->method('sendAlertsReportMail')
+				->with($this->equalTo(AlertSeverity::MEDIUM));
+		$this->monitorModelMock->expects($this->once())
+				->method('clearCache')
+				->with($this->equalTo(AlertSeverity::MEDIUM));
+
+		$this->monitorBatchJob->_onNewDay();
+	}
+
+	public function testOnNewWeek(): void {
 		$this->monitorModelMock->expects($this->once())
 				->method('sendAlertsReportMail')
 				->with($this->equalTo(AlertSeverity::LOW));
@@ -52,6 +67,6 @@ class MonitorBatchJobTest extends TestCase {
 				->method('clearCache')
 				->with($this->equalTo(AlertSeverity::LOW));
 
-		$this->monitorBatchJob->_onNewDay();
+		$this->monitorBatchJob->_onNewWeek();
 	}
 }
