@@ -21,6 +21,11 @@ class MonitorBatchJob {
 	}
 
 	public function _onNewDay(): void {
+		$this->monitorModel->sendAlertsReportMail(AlertSeverity::MEDIUM);
+		$this->monitorModel->clearCache(AlertSeverity::MEDIUM);
+	}
+
+	public function _onNewWeek(): void {
 		$this->monitorModel->sendAlertsReportMail(AlertSeverity::LOW);
 		$this->monitorModel->clearCache(AlertSeverity::LOW);
 	}
