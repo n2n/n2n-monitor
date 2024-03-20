@@ -45,7 +45,7 @@ class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonito
 						$this->n2nContext->getAppCache()->lookupCacheStore(MonitorModel::NS));
 	}
 
-	function alert(string $namespace, string $discriminator, string $text, AlertSeverity $severity = AlertSeverity::MEDIUM): void {
+	function alert(string $namespace, string $discriminator, string $text, AlertSeverity $severity = AlertSeverity::HIGH): void {
 		$alertCacheItem = new AlertCacheItem(md5($namespace . $discriminator), $text, $severity);
 		$this->getMonitorModel()->cacheAlert($alertCacheItem);
 	}
