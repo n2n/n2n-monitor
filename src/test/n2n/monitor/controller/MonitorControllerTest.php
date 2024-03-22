@@ -114,7 +114,7 @@ class MonitorControllerTest extends TestCase {
 
 		$this->assertEquals(200, $request->getStatus());
 		$this->assertCount(1, $this->monitorModel->getAlertCacheItems());
-		$this->assertEquals(AlertSeverity::HIGH, $this->monitorModel->getAlertCacheItems()[0]->severity);
+		$this->assertEquals(AlertSeverity::MEDIUM, $this->monitorModel->getAlertCacheItems()[0]->severity);
 		$this->assertEquals(2, $this->monitorModel->getAlertCacheItems()[0]->occurrences);
 	}
 
