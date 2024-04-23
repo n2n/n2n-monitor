@@ -16,7 +16,7 @@ class MonitorControllerTest extends TestCase {
 		$this->reset();
 		$n2nContext = TestEnv::lookup(N2nContext::class);
 		$this->monitorModel = new MonitorModel($n2nContext->getVarStore(),
-				$n2nContext->getAppCache()->lookupCacheStore(MonitorModel::NS));
+				$n2nContext->getAppCache()->lookupCacheStore(MonitorModel::NS, false));
 		$this->monitorModel->clearCache();
 	}
 

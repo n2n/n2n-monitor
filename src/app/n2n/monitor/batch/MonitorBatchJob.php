@@ -12,7 +12,7 @@ class MonitorBatchJob {
 
 	private function _init(N2nContext $n2nContext): void {
 		$this->monitorModel = new MonitorModel($n2nContext->getVarStore(),
-				$n2nContext->getAppCache()->lookupCacheStore(MonitorModel::NS));
+				$n2nContext->getAppCache()->lookupCacheStore(MonitorModel::NS, false));
 	}
 
 	public function _onNewHour(): void {
