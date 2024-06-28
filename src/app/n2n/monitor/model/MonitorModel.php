@@ -1,7 +1,7 @@
 <?php
 namespace n2n\monitor\model;
 
-use n2n\util\cache\CacheStore;
+use n2n\cache\CacheStore;
 use n2n\util\HashUtils;
 use n2n\monitor\bo\AlertCacheItem;
 use n2n\util\cache\CacheItem;
