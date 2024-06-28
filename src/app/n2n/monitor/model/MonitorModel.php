@@ -4,7 +4,7 @@ namespace n2n\monitor\model;
 use n2n\cache\CacheStore;
 use n2n\util\HashUtils;
 use n2n\monitor\bo\AlertCacheItem;
-use n2n\util\cache\CacheItem;
+use n2n\cache\CacheItem;
 use n2n\core\VarStore;
 use n2n\core\N2N;
 use n2n\core\ext\AlertSeverity;
