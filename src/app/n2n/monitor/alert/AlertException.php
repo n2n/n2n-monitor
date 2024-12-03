@@ -7,7 +7,7 @@ use Throwable;
 
 class AlertException extends \RuntimeException implements LogInfo {
 
-	function __construct(private ?string $hashCode = null, string $message = null, int $code = null,
+	function __construct(private ?string $hashCode = null, ?string $message = null, ?int $code = null,
 			?Throwable $previous = null) {
 		parent::__construct((string) $message, (int) $code, $previous);
 	}

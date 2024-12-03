@@ -85,7 +85,7 @@ class MonitorModel {
 	 *
 	 * @return AlertCacheItem[]
 	 */
-	public function getAlertCacheItems(AlertSeverity $severity = null): array {
+	public function getAlertCacheItems(?AlertSeverity $severity = null): array {
 		$characteristicNeedles = [];
 		if ($severity !== null) {
 			$characteristicNeedles['severity'] = $severity->value;
@@ -116,7 +116,7 @@ class MonitorModel {
 	 * @param AlertSeverity|null $severity
 	 * @return void
 	 */
-	public function sendAlertsReportMail(AlertSeverity $severity = null): void {
+	public function sendAlertsReportMail(?AlertSeverity $severity = null): void {
 		if (empty($this->getAlertCacheItems($severity))) {
 			return;
 		}
@@ -164,7 +164,7 @@ class MonitorModel {
 	 * @param AlertSeverity|null $severity
 	 * @return string
 	 */
-	public function createAlertsReportText(AlertSeverity $severity = null): string {
+	public function createAlertsReportText(?AlertSeverity $severity = null): string {
 		$reportText = '';
 		foreach ($this->getAlertCacheItems($severity) as $alertCacheItem) {
 			$reportText .= 'Alert occurred ' . $alertCacheItem->occurrences . ' times' . PHP_EOL;
