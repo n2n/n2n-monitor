@@ -67,7 +67,7 @@ class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonito
 		return false;
 	}
 
-	function lookupMagicObject(string $id, bool $required = true, string $contextNamespace = null): mixed {
+	function lookupMagicObject(string $id, bool $required = true, ?string $contextNamespace = null): mixed {
 		return null;
 	}
 }
