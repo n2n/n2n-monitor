@@ -145,8 +145,7 @@
 					parentZoneDelegate: any,
 					currentZone: any,
 					targetZone: any,
-					error: Error
-			) {
+					error: Error) {
 				error.name = 'AngularZoneError';
 				errorMonitor.handleError(error);
 
@@ -162,11 +161,11 @@
 		const originalConsoleError = console.error;
 
 		console.error = function(...args: any[]) {
+			originalConsoleError.apply(this, args);
+
 			const errorMessage = args.join(' ');
 			const hasErrorKeyword = errorMessage.indexOf('ERROR') !== -1;
 			const firstArgIsError = args[0] instanceof Error;
-
-			originalConsoleError.apply(this, args);
 
 			if (hasErrorKeyword || firstArgIsError) {
 				const error = firstArgIsError
@@ -184,14 +183,14 @@
 
 	function initializeErrorMonitoring(): void {
 		const monitorUrlMeta = document.querySelector('meta[name="monitor-url"]');
-		const monitorUrlContent = monitorUrlMeta?.getAttribute('content');
+		const monitorUrlMetaContent = monitorUrlMeta?.getAttribute('content');
 
-		if (!monitorUrlContent) {
+		if (!monitorUrlMetaContent) {
 			return;
 		}
 
 		try {
-			const monitorUrl = new URL(monitorUrlContent);
+			const monitorUrl = new URL(monitorUrlMetaContent);
 			const errorMonitor = new ErrorMonitor(monitorUrl);
 
 			(window as any)._n2nMonitorErrorHandler = errorMonitor;
