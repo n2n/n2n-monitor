@@ -55,7 +55,7 @@ class AlertToExceptionN2nMonitor extends SimpleMagicContext implements N2nMonito
 			return null;
 		}
 
-		$request = $this->n2nContext->getHttpContext()->getRequest();
+		$request = $this->n2nContext->lookup(\n2n\web\http\HttpContext::class)->getRequest();
 		return $request->getHostUrl()->ext($request->getContextPath()->ext('_monitoring',
 				$this->getMonitorModel()->getMonitorUrlKey(true)));
 	}
