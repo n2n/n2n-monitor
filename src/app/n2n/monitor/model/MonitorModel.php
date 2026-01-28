@@ -2,6 +2,7 @@
 namespace n2n\monitor\model;
 
 use n2n\cache\CacheStore;
+use n2n\cache\CharacteristicsList;
 use n2n\util\HashUtils;
 use n2n\monitor\bo\AlertCacheItem;
 use n2n\cache\CacheItem;
@@ -76,7 +77,7 @@ class MonitorModel {
 	 */
 	public function getAlertCacheItem(string $key, AlertSeverity $severity): ?AlertCacheItem {
 		return $this->monitorCacheStore->get(self::CACHE_STORE_NAME_ALERT,
-				['key' => $key, 'severity' => $severity->value])?->getData();
+				new CharacteristicsList(['key' => $key, 'severity' => $severity->value]))?->getData();
 	}
 
 	/**
@@ -86,10 +87,9 @@ class MonitorModel {
 	 * @return AlertCacheItem[]
 	 */
 	public function getAlertCacheItems(?AlertSeverity $severity = null): array {
-		$characteristicNeedles = [];
-		if ($severity !== null) {
-			$characteristicNeedles['severity'] = $severity->value;
-		}
+		$characteristicNeedles = ($severity !== null)
+				? new CharacteristicsList(['severity' => $severity->value])
+				: new CharacteristicsList([]);
 
 		return array_map(fn(CacheItem $cacheItem) => $cacheItem->getData(),
 				$this->monitorCacheStore->findAll(self::CACHE_STORE_NAME_ALERT, $characteristicNeedles));
@@ -138,7 +138,7 @@ class MonitorModel {
 		}
 
 		$this->monitorCacheStore->removeAll(self::CACHE_STORE_NAME_ALERT,
-				['severity' => $severity->value]);
+				new CharacteristicsList(['severity' => $severity->value]));
 	}
 
 	/**
@@ -198,6 +198,7 @@ class MonitorModel {
 	 */
 	private function storeAlertCacheItem(AlertCacheItem $alertCacheItem): void {
 		$this->monitorCacheStore->store(self::CACHE_STORE_NAME_ALERT,
-				['key' => $alertCacheItem->key, 'severity' => $alertCacheItem->severity->value], $alertCacheItem);
+				new CharacteristicsList(['key' => $alertCacheItem->key, 'severity' => $alertCacheItem->severity->value]),
+				$alertCacheItem);
 	}
 }
