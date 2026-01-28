@@ -89,7 +89,7 @@ class MonitorModel {
 	public function getAlertCacheItems(?AlertSeverity $severity = null): array {
 		$characteristicNeedles = ($severity !== null)
 				? new CharacteristicsList(['severity' => $severity->value])
-				: new CharacteristicsList([]);
+				: null;
 
 		return array_map(fn(CacheItem $cacheItem) => $cacheItem->getData(),
 				$this->monitorCacheStore->findAll(self::CACHE_STORE_NAME_ALERT, $characteristicNeedles));
