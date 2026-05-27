@@ -1,65 +1,90 @@
-var _a;
-var MonitorErrorHandlerImpl = /** @class */ (function () {
-    function MonitorErrorHandlerImpl(url) {
-        this.monitorUrl = url;
+var monitorUrl = readMonitorUrl();
+window._n2nMonitorErrorHandler = handleMonitorError;
+window.addEventListener('error', function (event) {
+    var _a;
+    handleMonitorError((_a = event.error) !== null && _a !== void 0 ? _a : event.message);
+});
+window.addEventListener('unhandledrejection', function (event) {
+    handleMonitorError(event.reason);
+});
+window.addEventListener('securitypolicyviolation', function (event) {
+    var error = new Error("Content Security Policy violation: blockedURI=".concat(event.blockedURI, ", effectiveDirective=").concat(event.effectiveDirective, ", violatedDirective=").concat(event.violatedDirective));
+    error.name = "SecurityPolicyViolationEvent on ".concat(window.location.href);
+    handleMonitorError(error);
+});
+function handleMonitorError(error) {
+    if (!monitorUrl) {
+        monitorUrl = readMonitorUrl();
     }
-    MonitorErrorHandlerImpl.prototype.getSeverityByErrorType = function (errorName) {
-        switch (errorName) {
-            // add severity depending on error name
-            default:
-                return 'medium';
-        }
-    };
-    MonitorErrorHandlerImpl.prototype.handleError = function (error) {
-        var severity = this.getSeverityByErrorType(error.name);
-        var options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: this.errorToBodyJson(error, severity)
-        };
-        if (this.monitorUrl === undefined) {
-            console.error("monitorUrl is undefined");
-            return;
-        }
-        fetch(this.monitorUrl, options).catch(function (error) { return console.error(error); });
+    if (!monitorUrl) {
+        return false;
+    }
+    var normalizedError = normalizeError(error);
+    fetch(monitorUrl.toString(), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(createMonitorPayload(normalizedError))
+    }).catch(function (fetchError) { return console.error(fetchError); });
+    console.error(normalizedError);
+    return true;
+}
+function readMonitorUrl() {
+    var _a;
+    var monitorUrlMeta = (_a = document.querySelector('meta[name="monitor-url"]')) === null || _a === void 0 ? void 0 : _a.getAttribute('content');
+    if (!monitorUrlMeta) {
+        return null;
+    }
+    try {
+        return new URL(monitorUrlMeta, window.location.href);
+    }
+    catch (error) {
         console.error(error);
+        return null;
+    }
+}
+function normalizeError(error) {
+    if (error instanceof Error) {
+        return error;
+    }
+    var normalizedError = new Error(stringifyError(error));
+    normalizedError.name = 'NonErrorThrown';
+    return normalizedError;
+}
+function stringifyError(error) {
+    if (typeof error === 'string') {
+        return error;
+    }
+    try {
+        var json = JSON.stringify(error);
+        return json === undefined ? String(error) : json;
+    }
+    catch (_a) {
+        return String(error);
+    }
+}
+function createMonitorPayload(error) {
+    return {
+        discriminator: (error.name + extractFileNameLineAndColumn(error.stack)).replace(/\s/g, ''),
+        severity: getSeverityByErrorType(error.name),
+        name: error.name,
+        message: error.message,
+        stackTrace: error.stack,
+        url: window.location.href
     };
-    MonitorErrorHandlerImpl.prototype.errorToBodyJson = function (error, severity) {
-        var errorStack = error.stack;
-        if (!errorStack) {
-            errorStack = "";
-        }
-        var regex = /(https?:\/\/[^\s]+):(\d+):(\d+)/;
-        var match = regex.exec(errorStack);
-        var fileNameLineAndColumn = null;
-        if (match !== null) {
-            fileNameLineAndColumn = match[1] + match[2] + match[3];
-        }
-        return JSON.stringify({
-            discriminator: (error.name + fileNameLineAndColumn).replace(/\s/g, ""),
-            severity: severity,
-            name: error.name,
-            message: error.message,
-            stackTrace: error.stack,
-            url: window.location.href
-        });
-    };
-    return MonitorErrorHandlerImpl;
-}());
-var monitorUrlMeta = (_a = document.querySelector('meta[name="monitor-url"]')) === null || _a === void 0 ? void 0 : _a.getAttribute('content');
-if (monitorUrlMeta) {
-    var url = new URL(monitorUrlMeta);
-    window._n2nMonitorErrorHandler = new MonitorErrorHandlerImpl(url);
-    window.addEventListener('error', function (event) {
-        var _a;
-        (_a = window._n2nMonitorErrorHandler) === null || _a === void 0 ? void 0 : _a.handleError(event.error);
-    });
-    window.addEventListener('securitypolicyviolation', function (event) {
-        var _a;
-        var error = new Error("Content Security Policy violation: blockedURI=".concat(event.blockedURI, ", effectiveDirective=").concat(event.effectiveDirective, ", violatedDirective=").concat(event.violatedDirective));
-        error.name = "SecurityPolicyViolationEvent on ".concat(window.location.href);
-        (_a = window._n2nMonitorErrorHandler) === null || _a === void 0 ? void 0 : _a.handleError(error);
-    });
+}
+function getSeverityByErrorType(errorName) {
+    switch (errorName) {
+        // add severity depending on error name
+        default:
+            return 'medium';
+    }
+}
+function extractFileNameLineAndColumn(errorStack) {
+    var match = /(https?:\/\/[^\s]+):(\d+):(\d+)/.exec(errorStack !== null && errorStack !== void 0 ? errorStack : '');
+    if (match === null) {
+        return null;
+    }
+    return match[1] + match[2] + match[3];
 }

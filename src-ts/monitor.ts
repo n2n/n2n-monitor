@@ -1,78 +1,117 @@
 interface Window {
-	_n2nMonitorErrorHandler?: MonitorErrorHandlerImpl;
+	_n2nMonitorErrorHandler?: (error: unknown) => boolean;
 }
 
-class MonitorErrorHandlerImpl {
-	private monitorUrl: URL | undefined;
+type MonitorSeverity = 'low' | 'medium' | 'high';
 
-	constructor(url: URL) {
-		this.monitorUrl = url;
+let monitorUrl = readMonitorUrl();
+window._n2nMonitorErrorHandler = handleMonitorError;
+
+window.addEventListener('error', (event: ErrorEvent) => {
+	handleMonitorError(event.error ?? event.message);
+});
+
+window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+	handleMonitorError(event.reason);
+});
+
+window.addEventListener('securitypolicyviolation', (event: SecurityPolicyViolationEvent) => {
+	const error = new Error(`Content Security Policy violation: blockedURI=${event.blockedURI}, effectiveDirective=${event.effectiveDirective}, violatedDirective=${event.violatedDirective}`);
+	error.name = `SecurityPolicyViolationEvent on ${window.location.href}`;
+	handleMonitorError(error);
+});
+
+function handleMonitorError(error: unknown): boolean {
+	if (!monitorUrl) {
+		monitorUrl = readMonitorUrl();
 	}
 
-	private getSeverityByErrorType(errorName: string): 'low' | 'medium' | 'high' {
-		switch (errorName) {
-			// add severity depending on error name
-			default:
-				return 'medium';
-		}
+	if (!monitorUrl) {
+		return false;
 	}
 
-	handleError(error: Error) {
-		const severity = this.getSeverityByErrorType(error.name);
-		const options = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: this.errorToBodyJson(error, severity)
-		};
+	const normalizedError = normalizeError(error);
 
-		if (this.monitorUrl === undefined) {
-			console.error("monitorUrl is undefined");
-			return;
-		}
+	fetch(monitorUrl.toString(), {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(createMonitorPayload(normalizedError))
+	}).catch((fetchError) => console.error(fetchError));
 
-		fetch(this.monitorUrl, options).catch(error => console.error(error));
+	console.error(normalizedError);
+	return true;
+}
+
+function readMonitorUrl(): URL|null {
+	const monitorUrlMeta = document.querySelector('meta[name="monitor-url"]')?.getAttribute('content');
+	if (!monitorUrlMeta) {
+		return null;
+	}
+
+	try {
+		return new URL(monitorUrlMeta, window.location.href);
+	} catch (error) {
 		console.error(error);
-	}
-
-	private errorToBodyJson(error: Error, severity: 'low' | 'medium' | 'high') {
-		let errorStack = error.stack;
-		if (!errorStack) {
-			errorStack = "";
-		}
-
-		const regex = /(https?:\/\/[^\s]+):(\d+):(\d+)/;
-		const match = regex.exec(errorStack);
-
-		let fileNameLineAndColumn = null;
-		if (match !== null) {
-			fileNameLineAndColumn = match[1] + match[2] + match[3];
-		}
-
-		return JSON.stringify({
-			discriminator: (error.name + fileNameLineAndColumn).replace(/\s/g, ""),
-			severity: severity,
-			name: error.name,
-			message: error.message,
-			stackTrace: error.stack,
-			url: window.location.href
-		});
+		return null;
 	}
 }
 
-const monitorUrlMeta = document.querySelector('meta[name="monitor-url"]')?.getAttribute('content');
-if (monitorUrlMeta) {
-	const url = new URL(monitorUrlMeta);
-	window._n2nMonitorErrorHandler = new MonitorErrorHandlerImpl(url);
+function normalizeError(error: unknown): Error {
+	if (error instanceof Error) {
+		return error;
+	}
 
-	window.addEventListener('error', (event: ErrorEvent) => {
-		window._n2nMonitorErrorHandler?.handleError(event.error);
-	});
+	const normalizedError = new Error(stringifyError(error));
+	normalizedError.name = 'NonErrorThrown';
+	return normalizedError;
+}
 
-	window.addEventListener('securitypolicyviolation', (event: SecurityPolicyViolationEvent) => {
-		const error = new Error(`Content Security Policy violation: blockedURI=${event.blockedURI}, effectiveDirective=${event.effectiveDirective}, violatedDirective=${event.violatedDirective}`);
-		error.name = `SecurityPolicyViolationEvent on ${window.location.href}`;
-		window._n2nMonitorErrorHandler?.handleError(error);
-	});
+function stringifyError(error: unknown): string {
+	if (typeof error === 'string') {
+		return error;
+	}
+
+	try {
+		const json = JSON.stringify(error);
+		return json === undefined ? String(error) : json;
+	} catch {
+		return String(error);
+	}
+}
+
+function createMonitorPayload(error: Error): {
+	discriminator: string,
+	severity: MonitorSeverity,
+	name: string,
+	message: string,
+	stackTrace: string|undefined,
+	url: string
+} {
+	return {
+		discriminator: (error.name + extractFileNameLineAndColumn(error.stack)).replace(/\s/g, ''),
+		severity: getSeverityByErrorType(error.name),
+		name: error.name,
+		message: error.message,
+		stackTrace: error.stack,
+		url: window.location.href
+	};
+}
+
+function getSeverityByErrorType(errorName: string): MonitorSeverity {
+	switch (errorName) {
+		// add severity depending on error name
+		default:
+			return 'medium';
+	}
+}
+
+function extractFileNameLineAndColumn(errorStack: string|undefined): string|null {
+	const match = /(https?:\/\/[^\s]+):(\d+):(\d+)/.exec(errorStack ?? '');
+	if (match === null) {
+		return null;
+	}
+
+	return match[1] + match[2] + match[3];
 }
