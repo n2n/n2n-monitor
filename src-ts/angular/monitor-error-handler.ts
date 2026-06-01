@@ -1,5 +1,8 @@
 declare global {
 	interface Window {
+		n2nMonitor?: {
+			report(error: unknown, context?: Record<string, unknown>): boolean;
+		};
 		_n2nMonitorErrorHandler?: (error: unknown) => boolean;
 	}
 }
@@ -15,15 +18,32 @@ export class N2nMonitorErrorHandler implements ErrorHandlerLike {
 	}
 
 	handleError(error: unknown): void {
+		if (this.reportToMonitor(error)) {
+			return;
+		}
+
+		this.defaultErrorHandler.handleError(error);
+	}
+
+	private reportToMonitor(error: unknown): boolean {
+		if (typeof window === 'undefined') {
+			return false;
+		}
+
 		try {
-			if (typeof window !== 'undefined' && window._n2nMonitorErrorHandler?.(error)) {
-				return;
+			if (window.n2nMonitor?.report(error, { source: 'angular' })) {
+				return true;
 			}
 		} catch (monitorError) {
 			console.error(monitorError);
 		}
 
-		this.defaultErrorHandler.handleError(error);
+		try {
+			return window._n2nMonitorErrorHandler?.(error) ?? false;
+		} catch (monitorError) {
+			console.error(monitorError);
+			return false;
+		}
 	}
 }
 

@@ -1,6 +1,11 @@
 {
   "compilerOptions": {
-    "outDir": "../src/public/assets/n2n-monitor/"
+    "outDir": "../src/public/assets/n2n-monitor/",
+    "target": "ES2020",
+    "lib": [
+      "DOM",
+      "ES2020"
+    ]
   },
   "files": [
     "monitor.ts"
