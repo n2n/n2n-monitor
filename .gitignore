@@ -4,3 +4,6 @@
 /src/var/tmp
 /src/var/shared/tmp
 /src/var/log
+/src/public/assets/n2n-monitor/monitor.js
+/src/public/assets/n2n-monitor/monitor.js.map
+/src-ts/node_modules
