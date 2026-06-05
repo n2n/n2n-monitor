@@ -2,7 +2,7 @@
 
 Monitor module for n2n applications.
 
-`monitor.js` is a framework-agnostic browser reporter for n2n pages.
+`monitor.js` is a clientside js error reporter for n2n.
 
 ## PHP Setup
 
@@ -26,10 +26,10 @@ Plain JavaScript projects do not need extra setup beyond `$monitorHtmlBuilder->m
 
 The script installs:
 
-- `window.n2nMonitor.report(error, context?)`
+- `window.n2nMonitor.report(error)`
 - `window._n2nMonitorErrorHandler(error)`
 
-Angular projects should forward caught Angular errors to `window.n2nMonitor.report(error, { source: 'angular' })`.
+Angular projects should forward caught Angular errors to `window.n2nMonitor.report(error)`.
 
 ## Payload
 
@@ -43,4 +43,3 @@ Payload fields:
 - `message`
 - `stackTrace`
 - `url`
-- `context` when provided
