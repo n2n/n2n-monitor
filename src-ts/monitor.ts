@@ -7,7 +7,7 @@ type MonitorSeverity = 'low'|'medium'|'high';
 const DEDUPE_TIME_WINDOW_MS = 1000;
 
 class MonitorErrorHandlerImpl {
-	private monitorUrl: URL|undefined;
+	private readonly monitorUrl?: URL;
 	private reportedErrors = new WeakMap<Error, number>();
 	private reportedFingerprints = new Map<string, number>();
 
